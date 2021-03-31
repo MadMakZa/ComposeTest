@@ -7,12 +7,21 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.MaterialTheme.typography
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -22,68 +31,71 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.composetest.ui.theme.ComposeTestTheme
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             Surface(color = MaterialTheme.colors.primary) {
-                DefaultPreview()
+                SimpleList()
             }
         }
     }
 }
 
+@Preview
 @Composable
-fun NewsStory(){
-    Column(
-        modifier = Modifier.padding(16.dp)
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.egypt),
-            contentDescription = null,
-            modifier = Modifier
-                .height(180.dp)
-                .fillMaxWidth()
-                .clip(shape = RoundedCornerShape(4.dp)),
-            contentScale = ContentScale.Crop
-        )
-        Spacer(
-            modifier = Modifier.height(20.dp)
-        )
+    fun SimpleList() {
+        val scrollState = rememberLazyListState()
+        LazyColumn(state = scrollState) {
+            items(1000) {
+                ImageListItem(it)
+            }
+        }
+    }
 
-        Text("A day wandering through the sand hills " +
-                "in Shark Fin Cove, and a few of the " +
-                "sights I saw",
-            style = typography.h6,
-            maxLines = 3,
-            overflow = TextOverflow.Ellipsis)
-        Text("Davenport, California")
-        Text("December 2018")
-        Spacer(
-            modifier = Modifier.height(20.dp)
-        )
-        Counter()
+@Composable
+fun ImageListItem(index: Int) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Spacer(Modifier.width(10.dp))
+        Text("Item #$index", style = MaterialTheme.typography.subtitle1)
     }
 }
-//превью функция для предварительного просмотра
-@Preview(showBackground = true)
-@Composable
-fun DefaultPreview(){
-    NewsStory()
-}
 
 @Composable
-fun Counter(){
+fun ScrollingList() {
+    val listSize = 100
+    // We save the scrolling position with this state
+    val scrollState = rememberLazyListState()
+    // We save the coroutine scope where our animated scroll will be executed
+    val coroutineScope = rememberCoroutineScope()
+
     Column {
-        val count = remember { mutableStateOf(0) }
+        Row {
+            Button(onClick = {
+                coroutineScope.launch {
+                    // 0 is the first item index
+                    scrollState.animateScrollToItem(0)
+                }
+            }) {
+                Text("Scroll to the top")
+            }
 
-        Divider(color = Color.Transparent, thickness = 32.dp)
-        Button(onClick = { count.value++ }) {
-            Text("Button clicked ${count.value} times")
+            Button(onClick = {
+                coroutineScope.launch {
+                    // listSize - 1 is the last index of the list
+                    scrollState.animateScrollToItem(listSize - 1)
+                }
+            }) {
+                Text("Scroll to the end")
+            }
+        }
 
+        LazyColumn(state = scrollState) {
+            items(listSize) {
+                ImageListItem(it)
+            }
         }
     }
 }
-
-
